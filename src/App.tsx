@@ -131,7 +131,7 @@ const MOCK_DATA: Booking[] = [
 
 const COLORS = ['#8b5cf6', '#ec4899', '#3b82f6', '#10b981', '#f59e0b'];
 
-type ViewType = 'overview' | 'database' | 'calendar' | 'status' | 'settings';
+type ViewType = 'overview' | 'database' | 'calendar' | 'timeline' | 'settings';
 
 export default function App() {
   const [data, setData] = useState<Booking[]>([]);
@@ -373,7 +373,7 @@ export default function App() {
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
     { id: 'database', label: 'Database', icon: Database },
     { id: 'calendar', label: 'Calendar', icon: CalendarDays },
-    { id: 'status', label: 'Status', icon: ClipboardList },
+    { id: 'timeline', label: 'Timeline', icon: ClipboardList },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
@@ -1296,12 +1296,27 @@ export default function App() {
             </div>
           )}
 
-          {activeView === 'status' && (
+          {activeView === 'timeline' && (
             <div className="space-y-8">
               <div className="flex items-end justify-between">
                 <div>
                   <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Production</h3>
-                  <h2 className={cn("text-3xl font-black tracking-tight", theme === 'dark' ? "text-white" : "text-slate-900")}>Job Progress Tracker</h2>
+                  <div className="flex items-center gap-4">
+                    <h2 className={cn("text-3xl font-black tracking-tight", theme === 'dark' ? "text-white" : "text-slate-900")}>Timeline Progress</h2>
+                    <button 
+                      onClick={handleSyncAll}
+                      disabled={isSyncingAll}
+                      className={cn(
+                        "p-2 rounded-xl transition-all flex items-center gap-2",
+                        theme === 'dark' ? "bg-slate-800 text-slate-400 hover:text-violet-400" : "bg-white border border-slate-200 text-slate-500 hover:text-violet-600 shadow-sm",
+                        isSyncingAll && "animate-spin opacity-50"
+                      )}
+                      title="Sync All to Google Calendar"
+                    >
+                      <RefreshCw className="w-3 h-3" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">{isSyncingAll ? 'Syncing...' : 'Sync Calendar'}</span>
+                    </button>
+                  </div>
                 </div>
               </div>
 

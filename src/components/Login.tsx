@@ -47,7 +47,7 @@ export default function Login({ onLogin, theme }: LoginProps) {
             <Camera className="w-10 h-10 text-white" />
           </div>
           <h1 className={cn("text-3xl font-black tracking-tight mb-2", theme === 'dark' ? "text-white" : "text-slate-900")}>
-            Famo CRM
+            Login Vendor
           </h1>
           <p className="text-slate-500 text-sm font-medium">Professional Photography Management</p>
         </div>

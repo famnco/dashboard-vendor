@@ -185,16 +185,29 @@ function syncToCalendar(booking, existingEventId, targetCalendarId) {
     
     if (!calendar) return existingEventId || '';
 
-    const dateMatch = booking.dateVenue.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-    if (!dateMatch) return existingEventId || '';
+    // Extract date and venue from "DD/MM/YYYY @ Venue" or "DD Month YYYY | Venue"
+    const separators = ['@', '|', '-'];
+    let parts = [booking.dateVenue || ''];
+    for (const sep of separators) {
+      if (booking.dateVenue.includes(sep)) {
+        parts = booking.dateVenue.split(sep);
+        break;
+      }
+    }
+    
+    const dateStr = parts[0].trim();
+    const venue = parts[1] ? parts[1].trim() : '';
 
-    const eventDate = new Date(parseInt(dateMatch[3]), parseInt(dateMatch[2]) - 1, parseInt(dateMatch[1]));
+    const eventDate = parseFlexibleDate(dateStr);
+    if (!eventDate) return existingEventId || '';
+
     const title = `[Famo] ${booking.coupleName} - ${booking.occasion}`;
     const description = `
 Package: ${booking.package}
-Client: ${booking.coupleName}
+Couple: ${booking.coupleName}
 Email: ${booking.email}
 Phone: ${booking.phone || 'N/A'}
+Venue: ${venue || 'N/A'}
 Notes: ${booking.additional || 'None'}
     `.trim();
 
@@ -204,15 +217,50 @@ Notes: ${booking.additional || 'None'}
     }
 
     if (event) {
-      event.setTitle(title).setDescription(description).setAllDayDate(eventDate);
+      event.setTitle(title).setDescription(description).setAllDayDate(eventDate).setLocation(venue);
     } else {
-      event = calendar.createAllDayEvent(title, eventDate, { description: description });
+      event = calendar.createAllDayEvent(title, eventDate, { 
+        description: description,
+        location: venue
+      });
     }
 
     return event.getId();
   } catch (e) {
     return existingEventId || '';
   }
+}
+
+function parseFlexibleDate(dateStr) {
+  const months = {
+    'januari': 0, 'februari': 1, 'maret': 2, 'april': 3, 'mei': 4, 'juni': 5,
+    'juli': 6, 'agustus': 7, 'september': 8, 'oktober': 9, 'november': 10, 'desember': 11,
+    'jan': 0, 'feb': 1, 'mar': 2, 'apr': 3, 'mei': 4, 'jun': 5,
+    'jul': 6, 'agu': 7, 'sep': 8, 'okt': 9, 'nov': 10, 'des': 11,
+    'january': 0, 'february': 1, 'march': 2, 'may': 4, 'june': 5, 'july': 6, 'august': 7, 'december': 11
+  };
+  
+  // Try DD/MM/YYYY
+  const slashMatch = dateStr.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (slashMatch) {
+    return new Date(parseInt(slashMatch[3]), parseInt(slashMatch[2]) - 1, parseInt(slashMatch[1]));
+  }
+  
+  // Try DD Month YYYY (e.g. 26 Mei 2026 or 26 May 2026)
+  const spaceMatch = dateStr.match(/(\d{1,2})\s+([a-zA-Z]+)\s+(\d{4})/);
+  if (spaceMatch) {
+    const day = parseInt(spaceMatch[1]);
+    const monthName = spaceMatch[2].toLowerCase();
+    const year = parseInt(spaceMatch[3]);
+    
+    let month = months[monthName];
+    if (month !== undefined) {
+      return new Date(year, month, day);
+    }
+  }
+  
+  const d = new Date(dateStr);
+  return isNaN(d.getTime()) ? null : d;
 }
 
 function mapHeaderToKey(header) {
