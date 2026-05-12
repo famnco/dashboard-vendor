@@ -1,4 +1,6 @@
 
+export type JobProgress = 'UPCOMING' | 'SELECTION AND EDITING' | 'PRINTING' | 'DELIVERING';
+
 export interface Booking {
   timestamp: string;
   email: string;
@@ -13,6 +15,9 @@ export interface Booking {
   downPayment?: number;
   id?: string;
   additional?: string;
+  progressStatus?: JobProgress;
+  deliveryDate?: string;
+  calendarEventId?: string;
 }
 
 export interface DashboardStats {
